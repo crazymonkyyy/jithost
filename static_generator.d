@@ -11,6 +11,7 @@ import file_resolver;
 import markdown_processor;
 import partialhtml_processor;
 import css_manager;
+import color_scheme;
 
 /**
  * Generates a complete static site from source files
@@ -18,7 +19,6 @@ import css_manager;
 class StaticSiteGenerator
 {
     FileResolver resolver;
-    PartialHtmlProcessor partialProcessor;
     CssManager cssManager;
     string sourceDir;
     string outputDir;
@@ -29,7 +29,6 @@ class StaticSiteGenerator
         outputDir = outDir;
         resolver = FileResolver();
         resolver.rootDir = srcDir;
-        partialProcessor = PartialHtmlProcessor();
         cssManager = CssManager();
         cssManager.rootDir = srcDir;
     }
@@ -132,16 +131,25 @@ class StaticSiteGenerator
                 string content = resolver.getContentForRequest(baseName ~ ".html");
                 string layout = resolver.getLayoutForRequest(baseName ~ ".html");
                 
+                import bodyhtml_processor;
+                import code_includer;
+
                 // Process content based on file type
                 string processedContent = content;
                 if (ext == ".md")
                 {
                     processedContent = convertMarkdownToHtmlWithEmbedding(content);
                 }
+                else if (ext == ".bodyhtml")
+                {
+                    // Process body HTML content with code inclusions and line-break-to-paragraph processing
+                    string processedWithIncludes = processCodeInclusions(content, sourceDir ~ "/" ~ contentFile);
+                    processedContent = processBodyHtmlContent(processedWithIncludes);
+                }
                 else if (ext == ".partialhtml")
                 {
-                    // For partial HTML files, we'll use them as layout and process the content separately
-                    processedContent = partialProcessor.processPartialHtml(sourceDir ~ "/" ~ contentFile, content);
+                    // For partial HTML files, process them with content injection
+                    processedContent = processPartialHtmlFile(sourceDir ~ "/" ~ contentFile, content);
                 }
                 
                 // Create the final HTML page
@@ -252,7 +260,7 @@ class StaticSiteGenerator
         else
         {
             // Use custom layout
-            return partialProcessor.processPartialHtml(sourceDir ~ "/" ~ layout, content);
+            return processPartialHtmlFile(sourceDir ~ "/" ~ layout, content);
         }
     }
 }

@@ -19,7 +19,8 @@ struct FileResolver
     struct ResolutionResult
     {
         string markdownFile;      // .md file path if found
-        string partialHtmlFile;   // .partialhtml file path if found  
+        string partialHtmlFile;   // .partialhtml file path if found
+        string bodyHtmlFile;      // .bodyhtml file path if found
         string contentFile;       // extensionless file path if found
         string[] allFoundFiles;   // all source files found for this request
     }
@@ -38,6 +39,7 @@ struct FileResolver
         // Build full paths
         string markdownPath = buildPath(rootDir, cleanPath ~ ".md");
         string partialHtmlPath = buildPath(rootDir, cleanPath ~ ".partialhtml");
+        string bodyHtmlPath = buildPath(rootDir, cleanPath ~ ".bodyhtml");
         string contentPath = buildPath(rootDir, cleanPath);
         
         // Check which files exist
@@ -52,7 +54,13 @@ struct FileResolver
             result.partialHtmlFile = partialHtmlPath;
             result.allFoundFiles ~= partialHtmlPath;
         }
-        
+
+        if (exists(bodyHtmlPath))
+        {
+            result.bodyHtmlFile = bodyHtmlPath;
+            result.allFoundFiles ~= bodyHtmlPath;
+        }
+
         if (exists(contentPath) && !isDir(contentPath))
         {
             result.contentFile = contentPath;
@@ -74,15 +82,19 @@ struct FileResolver
         {
             return cast(string)read(resolution.markdownFile);
         }
-        else if (!resolution.contentFile.empty)
+        else if (!resolution.bodyHtmlFile.empty)
         {
-            return cast(string)read(resolution.contentFile);
+            return cast(string)read(resolution.bodyHtmlFile);
         }
         else if (!resolution.partialHtmlFile.empty)
         {
             return cast(string)read(resolution.partialHtmlFile);
         }
-        
+        else if (!resolution.contentFile.empty)
+        {
+            return cast(string)read(resolution.contentFile);
+        }
+
         // If no files found, return empty string
         return "";
     }

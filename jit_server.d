@@ -22,7 +22,6 @@ import static_generator;
 class JitServer
 {
     FileResolver resolver;
-    PartialHtmlProcessor partialProcessor;
     CssManager cssManager;
     StaticSiteGenerator staticGenerator;
     string siteDir;
@@ -34,7 +33,6 @@ class JitServer
         port = serverPort;
         resolver = FileResolver();
         resolver.rootDir = siteDir;
-        partialProcessor = PartialHtmlProcessor();
         cssManager = CssManager();
         cssManager.rootDir = siteDir;
         staticGenerator = new StaticSiteGenerator(siteDir, siteDir ~ "/_temp_output");
@@ -151,6 +149,11 @@ class JitServer
         string content = "";
         string layout = "";
         
+        import bodyhtml_processor;
+        import code_includer;
+        import partialhtml_processor;
+        import color_scheme;
+
         // Process based on what files were found
         if (!resolution.markdownFile.empty)
         {
@@ -158,18 +161,37 @@ class JitServer
             content = convertMarkdownToHtmlWithEmbedding(rawContent);
             layout = resolver.getLayoutForRequest(path);
         }
-        else if (!resolution.contentFile.empty)
+        else if (!resolution.bodyHtmlFile.empty)
         {
-            content = cast(string)read(resolution.contentFile);
-            // For content files, also check for the special #! syntax like in original sitegen.d
-            content = partialProcessor.processWithHeaderFooter(resolution.contentFile);
+            string rawContent = cast(string)read(resolution.bodyHtmlFile);
+            // Process with code inclusions first (#! syntax)
+            string processedWithIncludes = processCodeInclusions(rawContent, resolution.bodyHtmlFile);
+            // Then process as body HTML format (newlines -> paragraphs)
+            content = processBodyHtmlContent(processedWithIncludes);
             layout = resolver.getLayoutForRequest(path);
         }
         else if (!resolution.partialHtmlFile.empty)
         {
-            layout = cast(string)read(resolution.partialHtmlFile);
-            // For partial HTML files, content would be empty or derived differently
-            content = ""; // This would need more complex handling based on how partialhtml files work
+            string rawLayout = cast(string)read(resolution.partialHtmlFile);
+            if (!resolution.contentFile.empty)
+            {
+                string rawContent = cast(string)read(resolution.contentFile);
+                layout = processPartialHtmlContent(rawLayout, rawContent);
+                content = ""; // Content is now embedded in layout
+            }
+            else
+            {
+                // If no separate content file, use layout as-is
+                layout = rawLayout;
+                content = "";
+            }
+        }
+        else if (!resolution.contentFile.empty)
+        {
+            content = cast(string)read(resolution.contentFile);
+            // For content files, also check for the special #! syntax like in original sitegen.d
+            content = processCodeInclusions(content, resolution.contentFile);
+            layout = resolver.getLayoutForRequest(path);
         }
         
         // Create the final HTML page

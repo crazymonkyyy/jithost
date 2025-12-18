@@ -1,0 +1,16 @@
+# Alex's Tech Blog Ideas
+
+I want to share my programming knowledge with other developers. I have lots of code examples I'd like to include.
+
+## What I need:
+- A place to write tutorials
+- Code blocks that look nice and are easy to copy
+- Somewhere dark colored since I code at night
+- Sections for different programming languages
+- Some way to organize my posts by difficulty level
+
+## Other thoughts:
+- Would be nice if people could subscribe to updates
+- Maybe have a section for book recommendations
+- I have some old blog posts I want to move over
+- Would like it to be fast and not cluttered with ads like other sites
