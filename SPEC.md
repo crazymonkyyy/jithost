@@ -31,3 +31,9 @@ Embed "```html <class=foo>```" into the website
 try to recreate my website in a separate folder
 make 3 demo projects(again separate folders)
 unit test the on test markdown to html strings
+
+EDIT 1:
+
+partial html was suppose to be about saving my article https://crazymonkyyy.github.io/writings/gif.html ; add a feature for a `.bodyhtml`, write a spec for it, it is html but without headers and endlines imply <p> its for direct control when markdown isnt enough, my old website did something manually for this
+
+`init` should take a color scheme; use: https://github.com/crazymonkyyy/leet-haker-colors/blob/master/base-16.csv

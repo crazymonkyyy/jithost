@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% title %}</title>
+    <link rel="stylesheet" href="/style.css">
+    <meta name="description" content="{% description %}">
+</head>
+<body>
+    {% header %}
+    <nav class="main-nav">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/posts/">Posts</a></li>
+            {% navigation %}
+        </ul>
+    </nav>
+    <main>
+        {% content %}
+    </main>
+    <aside class="sidebar">
+        {% sidebar %}
+    </aside>
+    <footer>
+        {% footer %}
+    </footer>
+</body>
+</html>
