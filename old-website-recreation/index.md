@@ -1,0 +1,8 @@
+# About Me
+
+Flexible, self-taught programmer,
+who works on Linux in Dlang. Strong
+believer in the KISS principal and that
+good code comes from refusing
+erroneous requirements, prototyping
+early and designing for data.

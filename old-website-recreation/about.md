@@ -1,0 +1,39 @@
+<link rel="stylesheet" href="/style.css">
+<title> monkyyy's website</title>
+
+<div id="cookie-banner">
+  <p>The algorthiums are requesting access to your mind, offering you endless content to prevent your self awareness. A machine without self awareness, no matter what hardware including biological, will never be intelligent; and will be redirected by the whims of systems larger then itself.</p>
+  <p>These boxes don't mean anything, and are massive eyesore. I only have this here to show off I know how. I litterally don't have any cookies. Nor would EU laws affect me.<a href="/files/software.png"> To learn more about how binding this is as a legal agreement, click here</a></p>
+  <p>Please click this meaningless button out of habit.</p>
+  <button onclick="acceptCookies()">Accept</button>
+</div>
+
+
+<script>
+  function acceptCookies() {
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+</script>
+
+<header class="header-outer">
+  <div class="header-inner"><nav class="header-navigation">
+    <a href="/index.html">monkyyy</a>
+    <a href="/writing.html">writings</a>
+    <a href="/projects.html">projects</a>
+    <a href="/education.html">education</a>
+    <a href="/about.html">about</a>
+  </nav></div>
+</header>
+<body>
+<div class="real-body">
+Flexible, self-taught programmer, who works on Linux in Dlang. Strong believer in the KISS principal and that good code comes from refusing erroneous requirements, prototyping early and designing for data.
+<p>
+I'm open to interesting work, pereferably with D, but I would also accept random job offers in C, C++, Zig, and other sane C-like languges. 
+<p>
+Professional email: michael.boston.programmer@gmail.com
+<p>
+Actaul email: crazymonkyyy@gmail.com
+<p>
+<a href="files/resume.pdf">Resume</a>
+</div>
+</body>

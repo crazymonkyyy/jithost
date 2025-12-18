@@ -1,0 +1,8 @@
+{
+    "title": "My JitHost Site",
+    "description": "A static site generated with JitHost",
+    "author": "Site Author",
+    "siteUrl": "",
+    "outputDir": "_site",
+    "sourceDir": "src"
+}
