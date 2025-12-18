@@ -1,4 +1,0 @@
-<footer class="site-footer">
-    <p>&copy; {% current_year %} {% site_title %}. All rights reserved.</p>
-    <p>Contact: {% contact_info %}</p>
-</footer>

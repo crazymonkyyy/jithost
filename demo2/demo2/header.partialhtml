@@ -1,4 +1,0 @@
-<header class="site-header">
-    <h1><a href="/">{% site_title %}</a></h1>
-    <p>{% site_description %}</p>
-</header>

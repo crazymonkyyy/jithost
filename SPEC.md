@@ -28,7 +28,7 @@ Create specs for: acceptable site file structures, and this "partial html"
 Embed "```html <class=foo>```" into the website
 
 ### testing
-try to recreate my website in a separate folder
+try to recreate my website in a separate folder EDIT: dont just copy and paste, restructure and clean up
 make 3 demo projects(again separate folders)
 unit test the on test markdown to html strings
 
