@@ -1,3 +1,4 @@
+#!/usr/bin/env dmd
 module jit_server;
 
 import std.stdio;
@@ -21,252 +22,298 @@ import static_generator;
  */
 class JitServer
 {
-    FileResolver resolver;
-    CssManager cssManager;
-    StaticSiteGenerator staticGenerator;
-    string siteDir;
-    ushort port;
-    
-    this(string siteDirectory, ushort serverPort = 8080)
-    {
-        siteDir = siteDirectory;
-        port = serverPort;
-        resolver = FileResolver();
-        resolver.rootDir = siteDir;
-        cssManager = CssManager();
-        cssManager.rootDir = siteDir;
-        staticGenerator = new StaticSiteGenerator(siteDir, siteDir ~ "/_temp_output");
-    }
-    
-    /**
-     * Starts the JIT server
-     */
-    void start()
-    {
-        writeln("Starting JIT Server on port ", port);
-        writeln("Serving site from: ", siteDir);
+	FileResolver resolver;
+	CssManager cssManager;
+	StaticSiteGenerator staticGenerator;
+	string siteDir;
+	ushort port;
+	
+	this(string siteDirectory, ushort serverPort = 8080)
+	{
+		siteDir = siteDirectory;
+		port = serverPort;
+		resolver = FileResolver();
+		resolver.rootDir = siteDir;
+		cssManager = CssManager();
+		cssManager.rootDir = siteDir;
+		staticGenerator = new StaticSiteGenerator(siteDir, siteDir ~ "/_temp_output");
+	}
+	
+	/**
+	 * Starts the JIT server
+	 */
+	void start()
+	{
+		writeln("Starting JIT Server on port ", port);
+		writeln("Serving site from: ", siteDir);
 
-        import std.socket;
-        import std.stdio;
-        import std.array;
-        import std.string;
+		import std.socket;
+		import std.stdio;
+		import std.array;
+		import std.string;
 
-        writeln("JIT server listening on port ", port, "...");
-        writeln("Ready to serve JIT-generated content from: ", siteDir);
+		writeln("JIT server listening on port ", port, "...");
+		writeln("Ready to serve JIT-generated content from: ", siteDir);
 
-        try {
-            // Create a TCP server socket
-            auto serverSocket = new TcpSocket();
-            serverSocket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
-            serverSocket.bind(new InternetAddress("127.0.0.1", port));
-            serverSocket.listen(10); // Allow up to 10 connections in queue
+		try {
+			// Create a TCP server socket
+			auto serverSocket = new TcpSocket();
+			serverSocket.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
+			serverSocket.bind(new InternetAddress("127.0.0.1", port));
+			serverSocket.listen(10); // Allow up to 10 connections in queue
 
-            writeln("Server is running. Press Ctrl+C to stop.");
+			writeln("Server is running. Press Ctrl+C to stop.");
 
-            while (true) {
-                try {
-                    // Accept incoming connections
-                    auto clientSocket = serverSocket.accept();
+			while (true) {
+				try {
+					// Accept incoming connections
+					auto clientSocket = serverSocket.accept();
 
-                    // Handle the request in a separate context (simplified)
-                    ubyte[4096] buffer;
-                    auto received = clientSocket.receive(buffer[]);
+					// Handle the request in a separate context (simplified)
+					ubyte[4096] buffer;
+					auto received = clientSocket.receive(buffer[]);
 
-                    if (received > 0) {
-                        string request = cast(string)buffer[0..received];
+					if (received > 0) {
+						string request = cast(string)buffer[0..received];
 
-                        // Parse the HTTP request line (GET /path HTTP/1.1)
-                        string path = "/";
-                        auto lines = request.split("\n");
-                        if (lines.length > 0) {
-                            auto requestLine = lines[0]; // e.g., "GET /index.html HTTP/1.1"
-                            auto parts = requestLine.split(" ");
-                            if (parts.length >= 2) {
-                                path = parts[1];
-                            }
-                        }
+						// Parse the HTTP request line (GET /path HTTP/1.1)
+						string path = "/";
+						auto lines = request.split("\n");
+						if (lines.length > 0) {
+							auto requestLine = lines[0]; // e.g., "GET /index.html HTTP/1.1"
+							auto parts = requestLine.split(" ");
+							if (parts.length >= 2) {
+								path = parts[1];
+							}
+						}
 
-                        // Process the request using our existing method
-                        string responseContent = processRequest(path);
+						// Handle root path by redirecting to index.html
+						if (path == "/" || path == "") {
+						    path = "/index.html";
+						}
 
-                        // Create HTTP response
-                        string response = "HTTP/1.1 200 OK\r\n";
-                        response ~= "Content-Type: text/html; charset=utf-8\r\n";
-                        response ~= "Connection: close\r\n";
-                        response ~= format("Content-Length: %d\r\n", responseContent.length);
-                        response ~= "\r\n";
-                        response ~= responseContent;
+						// Process the request using our existing method
+						string responseContent = processRequest(path);
 
-                        // Send response
-                        clientSocket.send(cast(ubyte[])response);
-                    }
+						// Determine response status based on content
+						string status = "200 OK";
+						if (responseContent.indexOf("404 - Page Not Found") != -1) {
+						    status = "404 Not Found";
+						}
 
-                    clientSocket.close();
-                } catch (SocketException e) {
-                    writeln("Socket error: ", e.msg);
-                } catch (Exception e) {
-                    writeln("Error handling request: ", e.msg);
-                }
-            }
+						import std.string : replace;
+						// Log the request with appropriate status
+						writeln("Serving request: ", path, " - Status: ", replace(status, " ", "_"));
 
-            serverSocket.close(); // This line will never be reached due to the while(true) loop
-        } catch (SocketException e) {
-            writeln("Failed to start server: ", e.msg);
-        } catch (Exception e) {
-            writeln("Failed to start server: ", e.msg);
-        }
-    }
+						// Create HTTP response with appropriate status
+						string response = format("HTTP/1.1 %s\r\n", status);
+						response ~= "Content-Type: text/html; charset=utf-8\r\n";
+						response ~= "Connection: close\r\n";
+						response ~= format("Content-Length: %d\r\n", responseContent.length);
+						response ~= "\r\n";
+						response ~= responseContent;
 
-    /**
-     * Processes a single request for JIT generation
-     */
-    string processRequest(string path)
-    {
-        // Remove leading slash and normalize path
-        if (path.length > 0 && path[0] == '/')
-        {
-            path = path[1 .. $];
-        }
-        
-        // Handle special files (like CSS, images, etc.) directly
-        string ext = extension(path).toLower();
-        if (ext == ".css" || ext == ".js" || ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".ico")
-        {
-            string filePath = buildPath(siteDir, path);
-            if (exists(filePath) && isFile(filePath))
-            {
-                return cast(string)read(filePath);
-            }
-            else
-            {
-                return "File not found";
-            }
-        }
-        
-        // For HTML paths, resolve to source files
-        auto resolution = resolver.resolveRequest(path);
-        
-        string content = "";
-        string layout = "";
-        
-        import bodyhtml_processor;
-        import code_includer;
-        import partialhtml_processor;
-        import color_scheme;
+						// Send response
+						clientSocket.send(cast(ubyte[])response);
+					}
 
-        // Process based on what files were found
-        if (!resolution.markdownFile.empty)
-        {
-            string rawContent = cast(string)read(resolution.markdownFile);
-            content = convertMarkdownToHtmlWithEmbedding(rawContent);
-            layout = resolver.getLayoutForRequest(path);
-        }
-        else if (!resolution.bodyHtmlFile.empty)
-        {
-            string rawContent = cast(string)read(resolution.bodyHtmlFile);
-            // Process with code inclusions first (#! syntax)
-            string processedWithIncludes = processCodeInclusions(rawContent, resolution.bodyHtmlFile);
-            // Then process as body HTML format (newlines -> paragraphs)
-            content = processBodyHtmlContent(processedWithIncludes);
-            layout = resolver.getLayoutForRequest(path);
-        }
-        else if (!resolution.partialHtmlFile.empty)
-        {
-            string rawLayout = cast(string)read(resolution.partialHtmlFile);
-            if (!resolution.contentFile.empty)
-            {
-                string rawContent = cast(string)read(resolution.contentFile);
-                layout = processPartialHtmlContent(rawLayout, rawContent);
-                content = ""; // Content is now embedded in layout
-            }
-            else
-            {
-                // If no separate content file, use layout as-is
-                layout = rawLayout;
-                content = "";
-            }
-        }
-        else if (!resolution.contentFile.empty)
-        {
-            content = cast(string)read(resolution.contentFile);
-            // For content files, also check for the special #! syntax like in original sitegen.d
-            content = processCodeInclusions(content, resolution.contentFile);
-            layout = resolver.getLayoutForRequest(path);
-        }
-        
-        // Create the final HTML page
-        string baseName = path;
-        if (baseName.endsWith(".html"))
-        {
-            baseName = baseName[0 .. $ - 5];
-        }
-        
-        string finalPage = createHtmlPage(content, baseName, layout);
-        return finalPage;
-    }
-    
-    /**
-     * Creates a complete HTML page from content and layout
-     */
-    private string createHtmlPage(string content, string pageTitle, string layout = "")
-    {
-        string cssLink = cssManager.generateCssLink();
-        
-        string title = pageTitle.replace("_", " ").replace("-", " ");
-        title = "" ~ to!string(toUpper(title[0])) ~ title[1 .. $];
-        
-        if (layout.empty)
-        {
-            // Use default layout
-            return q{
+					clientSocket.close();
+				} catch (SocketException e) {
+					writeln("Socket error: ", e.msg);
+				} catch (Exception e) {
+					writeln("Error handling request: ", e.msg);
+				}
+			}
+
+			serverSocket.close(); // This line will never be reached due to the while(true) loop
+		} catch (SocketException e) {
+			writeln("Failed to start server: ", e.msg);
+		} catch (Exception e) {
+			writeln("Failed to start server: ", e.msg);
+		}
+	}
+
+	/**
+	 * Processes a single request for JIT generation
+	 */
+	string processRequest(string path)
+	{
+		// Remove leading slash and normalize path
+		if (path.length > 0 && path[0] == '/')
+		{
+			path = path[1 .. $];
+		}
+		
+		// Handle special files (like CSS, images, etc.) directly
+		string ext = extension(path).toLower();
+		if (ext == ".css" || ext == ".js" || ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".ico")
+		{
+			string filePath = buildPath(siteDir, path);
+			if (exists(filePath) && isFile(filePath))
+			{
+				return cast(string)read(filePath);
+			}
+			else
+			{
+				return "File not found";
+			}
+		}
+		
+		// For HTML paths, resolve to source files
+		auto resolution = resolver.resolveRequest(path);
+		
+		string content = "";
+		string layout = "";
+		
+		import bodyhtml_processor;
+		import code_includer;
+		import partialhtml_processor;
+		import color_scheme;
+
+		// Process based on what files were found
+		if (!resolution.markdownFile.empty)
+		{
+			string rawContent = cast(string)read(resolution.markdownFile);
+			content = convertMarkdownToHtmlWithEmbedding(rawContent);
+			layout = resolver.getLayoutForRequest(path);
+		}
+		else if (!resolution.bodyHtmlFile.empty)
+		{
+			string rawContent = cast(string)read(resolution.bodyHtmlFile);
+			// Process with code inclusions first (#! syntax)
+			string processedWithIncludes = processCodeInclusions(rawContent, resolution.bodyHtmlFile);
+			// Then process as body HTML format (newlines -> paragraphs)
+			content = processBodyHtmlContent(processedWithIncludes);
+			layout = resolver.getLayoutForRequest(path);
+		}
+		else if (!resolution.partialHtmlFile.empty)
+		{
+			string rawLayout = cast(string)read(resolution.partialHtmlFile);
+			if (!resolution.contentFile.empty)
+			{
+				string rawContent = cast(string)read(resolution.contentFile);
+				layout = processPartialHtmlContent(rawLayout, rawContent);
+				content = ""; // Content is now embedded in layout
+			}
+			else
+			{
+				// If no separate content file, use layout as-is
+				layout = rawLayout;
+				content = "";
+			}
+		}
+		else if (!resolution.contentFile.empty)
+		{
+			content = cast(string)read(resolution.contentFile);
+			// For content files, also check for the special #! syntax like in original sitegen.d
+			content = processCodeInclusions(content, resolution.contentFile);
+			layout = resolver.getLayoutForRequest(path);
+		}
+		else
+		{
+			// No files found for this path
+			writeln("WARNING: No source files found for path: ", path);
+			return create404Page(path);
+		}
+
+		// Create the final HTML page
+		string baseName = path;
+		if (baseName.endsWith(".html"))
+		{
+			baseName = baseName[0 .. $ - 5];
+		}
+
+		string finalPage = createHtmlPage(content, baseName, layout);
+		return finalPage;
+	}
+
+	/**
+	 * Creates a 404 error page for missing files
+	 */
+	private string create404Page(string path)
+	{
+		string cssLink = cssManager.generateCssLink();
+		return q{
 <html>
 <head>
-    <title>} ~ title ~ q{</title>
-    } ~ cssLink ~ q{
+	<title>404 - Page Not Found</title>
+	} ~ cssLink ~ q{
 </head>
 <body>
-    } ~ content ~ q{
+	<h1>404 - Page Not Found</h1>
+	<p>The requested path was: } ~ path ~ q{</p>
+	<p>No source files were found to generate this page.</p>
 </body>
 </html>
 };
-        }
-        else
-        {
-            // Use custom layout
-            // For this simple implementation, we'll just wrap the content
-            // A full implementation would have more sophisticated layout handling
-            return layout.replace("{% content %}", content).replace("{{content}}", content);
-        }
-    }
+	}
+
+	/**
+	 * Creates a complete HTML page from content and layout
+	 */
+	private string createHtmlPage(string content, string pageTitle, string layout = "")
+	{
+		string cssLink = cssManager.generateCssLink();
+		
+		string title = pageTitle.replace("_", " ").replace("-", " ");
+		if (title.length > 0) {
+			title = "" ~ to!string(toUpper(title[0])) ~ title[1 .. $];
+		} else {
+			title = "Untitled"; // Default title if input is empty
+		}
+		
+		if (layout.empty)
+		{
+			// Use default layout
+			return q{
+<html>
+<head>
+	<title>} ~ title ~ q{</title>
+	} ~ cssLink ~ q{
+</head>
+<body>
+	} ~ content ~ q{
+</body>
+</html>
+};
+		}
+		else
+		{
+			// Use custom layout
+			// For this simple implementation, we'll just wrap the content
+			// A full implementation would have more sophisticated layout handling
+			return layout.replace("{% content %}", content).replace("{{content}}", content);
+		}
+	}
 }
 
 unittest
 {
-    import std.file : writeTemp, TempDir;
-    
-    // Create a temporary directory for testing
-    TempDir tempDir = createTempDir();
-    scope(exit) tempDir.destroy();
-    
-    string testDir = tempDir.path;
-    
-    // Create test files
-    write(testDir ~ "/index.md", "# Home\n\nWelcome to the site.");
-    write(testDir ~ "/about.md", "# About\n\nLearn more about us.");
-    write(testDir ~ "/style.css", "body { margin: 0; }");
-    
-    JitServer server = new JitServer(testDir, 8080);
-    
-    // Test processing requests
-    string indexResult = server.processRequest("/index.html");
-    assert(indexResult.canFind("<h1>Home</h1>"));
-    assert(indexResult.canFind("Welcome to the site."));
-    
-    string aboutResult = server.processRequest("/about.html");
-    assert(aboutResult.canFind("<h1>About</h1>"));
-    assert(aboutResult.canFind("Learn more about us."));
-    
-    // Test CSS file serving
-    string cssResult = server.processRequest("/style.css");
-    assert(cssResult.canFind("body { margin: 0; }"));
+	import std.file : writeTemp, TempDir;
+	
+	// Create a temporary directory for testing
+	TempDir tempDir = createTempDir();
+	scope(exit) tempDir.destroy();
+	
+	string testDir = tempDir.path;
+	
+	// Create test files
+	write(testDir ~ "/index.md", "# Home\n\nWelcome to the site.");
+	write(testDir ~ "/about.md", "# About\n\nLearn more about us.");
+	write(testDir ~ "/style.css", "body { margin: 0; }");
+	
+	JitServer server = new JitServer(testDir, 8080);
+	
+	// Test processing requests
+	string indexResult = server.processRequest("/index.html");
+	assert(indexResult.canFind("<h1>Home</h1>"));
+	assert(indexResult.canFind("Welcome to the site."));
+	
+	string aboutResult = server.processRequest("/about.html");
+	assert(aboutResult.canFind("<h1>About</h1>"));
+	assert(aboutResult.canFind("Learn more about us."));
+	
+	// Test CSS file serving
+	string cssResult = server.processRequest("/style.css");
+	assert(cssResult.canFind("body { margin: 0; }"));
 }

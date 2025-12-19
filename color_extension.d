@@ -1,3 +1,4 @@
+#!/usr/bin/env dmd
 module color_extension;
 
 import arsd.color;

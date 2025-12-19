@@ -38,6 +38,12 @@ void main() {
 </div>
 ```
 
+## Small Code Block Example
+
+```python
+print("This is a small code block")
+```
+
 ## Using Partial HTML Layouts
 
 This page is using a partial HTML layout template that provides consistent navigation and structure across the site.

@@ -1,3 +1,4 @@
+#!/usr/bin/env dmd
 module markdown_tests;
 
 import markdown_processor;

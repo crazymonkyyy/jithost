@@ -1,7 +1,0 @@
-This is a sample page using the .bodyhtml format.
-
-In this format, empty lines become paragraph breaks.
-
-<p>This is embedded HTML within the bodyhtml content.</p>
-
-#!sample_code

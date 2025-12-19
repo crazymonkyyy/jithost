@@ -1,0 +1,18 @@
+# About This Recreation
+
+This is the recreation of the original monkyyy website using the new JitHost system with the .bodyhtml and .partialhtml formats.
+
+## Original Site Behavior Replicated
+
+This site replicates the original behavior of the `sitegen.d` script:
+
+1. Content files are processed with line-endings converted to paragraphs
+2. `#!` syntax includes code from external files
+3. Header and footer are applied to content
+4. CSS is unified to a single file
+
+## File Structure
+
+- Content is in `.bodyhtml` format with custom processing
+- Layout is in `.partialhtml` format
+- All pages are generated with the same structure as the original
