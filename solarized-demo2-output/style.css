@@ -1,0 +1,280 @@
+/* Solarized Dark Theme */
+/* Base16 color scheme based on Solarized Dark */
+:root {
+  --base00: #002b36; /* base00 - Default background */
+  --base01: #073642; /* base01 - Lighter background (status bars) */
+  --base02: #586e75; /* base02 - Selection background */
+  --base03: #657b83; /* base03 - Comments, invisibles */
+  --base04: #839496; /* base04 - Dark foreground (status bars) */
+  --base05: #93a1a1; /* base05 - Default foreground, cursor */
+  --base06: #eee8d5; /* base06 - Light foreground */
+  --base07: #fdf6e3; /* base07 - Light background */
+  --base08: #dc322f; /* red */
+  --base09: #cb4b16; /* orange */
+  --base0A: #b58900; /* yellow */
+  --base0B: #859900; /* green */
+  --base0C: #2aa198; /* cyan */
+  --base0D: #268bd2; /* blue */
+  --base0E: #6c71c4; /* violet */
+  --base0F: #d33682; /* magenta */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+    background-color: var(--base00);
+    color: var(--base05);
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: var(--base01);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    color: var(--base06);
+}
+
+h1, h2, h3 {
+    color: var(--base0D); /* Blue heading */
+    border-bottom: 2px solid var(--base0C); /* Cyan underline */
+    padding-bottom: 10px;
+}
+
+h1 {
+    color: var(--base0C); /* Cyan for main heading */
+    border-bottom: 3px solid var(--base0C);
+}
+
+h2 {
+    color: var(--base0D); /* Blue for secondary heading */
+}
+
+h3 {
+    color: var(--base0A); /* Yellow for tertiary heading */
+}
+
+a {
+    color: var(--base0C); /* Cyan links */
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: var(--base0B); /* Green on hover */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: var(--base01);
+    border: 1px solid var(--base02);
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid var(--base02);
+}
+
+th {
+    background-color: var(--base02);
+    color: var(--base06);
+}
+
+tr:nth-child(even) {
+    background-color: var(--base01);
+}
+
+tr:nth-child(odd) {
+    background-color: var(--base00);
+}
+
+tr:hover {
+    background-color: var(--base02);
+}
+
+/* Code highlighting styles based on Solarized Dark */
+code {
+    background-color: var(--base02);
+    color: var(--base0A); /* Yellow for inline code */
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+pre {
+    background-color: var(--base02);
+    color: var(--base06);
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 1em 0;
+    border-left: 4px solid var(--base0C); /* Cyan border */
+}
+
+pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* Language-specific syntax highlighting for code blocks */
+.language-d {
+    color: var(--base0B); /* Green for D language */
+}
+
+.language-python {
+    color: var(--base0E); /* Violet for Python */
+}
+
+.language-javascript, .language-js {
+    color: var(--base09); /* Orange for JavaScript */
+}
+
+.language-css {
+    color: var(--base0A); /* Yellow for CSS */
+}
+
+.language-html {
+    color: var(--base08); /* Red for HTML */
+}
+
+/* Specific syntax elements for code blocks */
+.token.comment { color: var(--base03); }
+.token.prolog { color: var(--base03); }
+.token.doctype { color: var(--base03); }
+.token.cdata { color: var(--base03); }
+
+.token.punctuation { color: var(--base05); }
+
+.token.property { color: var(--base0D); }
+.token.tag { color: var(--base08); }
+.token.boolean { color: var(--base09); }
+.token.number { color: var(--base09); }
+.token.constant { color: var(--base09); }
+.token.symbol { color: var(--base0E); }
+.token.deleted { color: var(--base08); }
+
+.token.selector { color: var(--base0E); }
+.token.attr-name { color: var(--base09); }
+.token.string { color: var(--base0B); }
+.token.char { color: var(--base0B); }
+.token.builtin { color: var(--base0B); }
+.token.inserted { color: var(--base0B); }
+
+.token.operator { color: var(--base05); }
+.token.entity { color: var(--base0C); }
+.token.url { color: var(--base0C); }
+.style { color: var(--base0C); }
+
+.token.atrule { color: var(--base0A); }
+.token.attr-value { color: var(--base0B); }
+.token.keyword { color: var(--base0E); }
+
+.token.function { color: var(--base0D); }
+.token.class-name { color: var(--base0A); }
+.token.regex { color: var(--base0C); }
+.token.important { color: var(--base08); }
+.token.variable { color: var(--base08); }
+
+.token.bold { font-weight: bold; }
+.token.italic { font-style: italic; }
+
+/* Solarized card component styles */
+.card {
+    background-color: var(--base01);
+    border: 1px solid var(--base02);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: var(--base02);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--base03);
+    border-top-left-radius: calc(0.5rem - 1px);
+    border-top-right-radius: calc(0.5rem - 1px);
+    color: var(--base06);
+}
+
+.card-body {
+    padding: 1rem;
+    color: var(--base05);
+}
+
+#info-card {
+    border-left: 4px solid var(--base0C);
+}
+
+/* Footer and header styling */
+header {
+    background-color: var(--base01);
+    padding: 1rem;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--base02);
+}
+
+nav a {
+    color: var(--base0C);
+    margin-right: 15px;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+    color: var(--base0B);
+}
+
+footer {
+    background-color: var(--base01);
+    padding: 1rem;
+    margin-top: 20px;
+    border-top: 1px solid var(--base02);
+    text-align: center;
+    color: var(--base04);
+}
+
+/* Blockquote styling */
+blockquote {
+    border-left: 4px solid var(--base0C);
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    background-color: var(--base01);
+    color: var(--base06);
+    font-style: italic;
+}
+
+/* List styling */
+ul, ol {
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 5px;
+    color: var(--base05);
+}
+
+/* Form elements for solarized dark */
+input, textarea, select {
+    background-color: var(--base01);
+    color: var(--base05);
+    border: 1px solid var(--base02);
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--base0C);
+    box-shadow: 0 0 0 2px rgba(42, 161, 152, 0.2);
+}

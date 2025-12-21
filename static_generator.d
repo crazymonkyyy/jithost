@@ -117,40 +117,63 @@ class StaticSiteGenerator
 		
 		foreach (contentFile; contentFiles)
 		{
+			writeln("DEBUG: Processing content file: ", contentFile);
 			string ext = extension(contentFile).toLower();
-			string baseName = contentFile;
+
+			// Calculate baseName relative to sourceDir
+			string relativePath = contentFile;
+			if (contentFile.startsWith(sourceDir))
+			{
+				relativePath = contentFile[sourceDir.length .. $];
+				if (relativePath.startsWith("/"))
+					relativePath = relativePath[1 .. $];
+			}
+
+			string baseName = relativePath;
 			if (!ext.empty)
 			{
-				baseName = contentFile[0 .. $ - ext.length];
+				baseName = relativePath[0 .. $ - ext.length];
 			}
-			
+
 			string outputPath = outputDir ~ "/" ~ baseName ~ ".html";
-			
+
 			try
 			{
 				// Get content and layout for this file
+				writeln("DEBUG: Requesting content for path: ", baseName ~ ".html");
 				string content = resolver.getContentForRequest(baseName ~ ".html");
+				writeln("DEBUG: Retrieved content (first 100 chars): ", content.length > 100 ? content[0..100] ~ "..." : content);
 				string layout = resolver.getLayoutForRequest(baseName ~ ".html");
+				writeln("DEBUG: Retrieved layout (first 100 chars): ", layout.length > 100 ? layout[0..100] ~ "..." : layout);
 				
 				import bodyhtml_processor;
 				import code_includer;
 
 				// Process content based on file type
 				string processedContent = content;
+				writeln("DEBUG: Processing file with extension: ", ext);
 				if (ext == ".md")
 				{
+					writeln("DEBUG: Processing as markdown file");
 					processedContent = convertMarkdownToHtmlWithEmbedding(content);
+					writeln("DEBUG: Processed markdown content (first 100 chars): ", processedContent.length > 100 ? processedContent[0..100] ~ "..." : processedContent);
 				}
 				else if (ext == ".bodyhtml")
 				{
+					writeln("DEBUG: Processing as bodyhtml file");
 					// Process body HTML content with code inclusions and line-break-to-paragraph processing
 					string processedWithIncludes = processCodeInclusions(content, sourceDir ~ "/" ~ contentFile);
 					processedContent = processBodyHtmlContent(processedWithIncludes);
 				}
 				else if (ext == ".partialhtml")
 				{
+					writeln("DEBUG: Processing as partialhtml file");
 					// For partial HTML files, process them with content injection
 					processedContent = processPartialHtmlFile(sourceDir ~ "/" ~ contentFile, content);
+				}
+				else
+				{
+					writeln("DEBUG: Processing as generic content file");
 				}
 				
 				// Create the final HTML page
@@ -260,8 +283,21 @@ class StaticSiteGenerator
 		}
 		else
 		{
-			// Use custom layout
-			return processPartialHtmlFile(sourceDir ~ "/" ~ layout, content);
+			// Use custom layout - the layout variable contains the HTML template content
+			// Replace placeholders in the layout with actual content
+			import std.string : replace;
+
+			// Replace content placeholders in the layout with actual content
+			// Support both formats: {% content %} and {{content}}
+			string processedLayout = layout;
+			processedLayout = processedLayout.replace("{% content %}", content);
+			processedLayout = processedLayout.replace("{{content}}", content);
+
+			// Also replace the title placeholder if it exists
+			processedLayout = processedLayout.replace("{% title %}", title);
+			processedLayout = processedLayout.replace("{{title}}", title);
+
+			return processedLayout;
 		}
 	}
 }

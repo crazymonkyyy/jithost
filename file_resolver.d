@@ -106,15 +106,52 @@ struct FileResolver
 	string getLayoutForRequest(string requestPath)
 	{
 		auto resolution = resolveRequest(requestPath);
-		
+
 		// If we have a partial HTML file, return its content
 		if (!resolution.partialHtmlFile.empty)
 		{
 			return cast(string)read(resolution.partialHtmlFile);
 		}
-		
+
+		// For layout lookup, we need to determine the source directory
+		// where the content file is located, and look for layout.partialhtml there
+
+		// Look for layout.partialhtml based on where the content was found
+		string layoutPath;
+
+		// If we have a markdown file, look in the same directory as the markdown file
+		if (!resolution.markdownFile.empty) {
+			string contentDir = getDirName(resolution.markdownFile);
+			layoutPath = buildPath(contentDir, "layout.partialhtml");
+		}
+		// If we have a bodyhtml file, look in the same directory
+		else if (!resolution.bodyHtmlFile.empty) {
+			string contentDir = getDirName(resolution.bodyHtmlFile);
+			layoutPath = buildPath(contentDir, "layout.partialhtml");
+		}
+		// If we have a content file, look in the same directory
+		else if (!resolution.contentFile.empty) {
+			string contentDir = getDirName(resolution.contentFile);
+			layoutPath = buildPath(contentDir, "layout.partialhtml");
+		}
+		// Otherwise, look in the root directory
+		else {
+			layoutPath = buildPath(rootDir, "layout.partialhtml");
+		}
+
+		if (exists(layoutPath) && isFile(layoutPath)) {
+			return cast(string)read(layoutPath);
+		}
+
 		// Otherwise, return empty string (will use default layout)
 		return "";
+	}
+
+	// Helper function to get directory name
+	private string getDirName(string filePath) {
+		size_t idx = filePath.lastIndexOf('/');
+		if (idx == -1) return ".";
+		return filePath[0 .. idx];
 	}
 	
 	/**
@@ -131,8 +168,9 @@ struct FileResolver
 				string ext = extension(entry.name);
 				string name = entry.name;
 				
-				// Look for content files: .md, .partialhtml, or extensionless
-				if (ext == ".md" || ext == ".partialhtml" || ext.empty)
+				// Look for content files: .md, .bodyhtml, or extensionless
+				// .partialhtml files are layout templates, not content files
+				if (ext == ".md" || ext == ".bodyhtml" || ext.empty)
 				{
 					result ~= name;
 				}
